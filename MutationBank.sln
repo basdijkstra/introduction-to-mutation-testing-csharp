@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutationBank", "MutationBank\MutationBank.csproj", "{B69BFBBA-F3D8-49F2-8E6E-AC7E303A4F36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutationBank.Tests", "MutationBank.Tests\MutationBank.Tests.csproj", "{D890C053-440F-41CD-940D-C3EE6D4B8968}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B69BFBBA-F3D8-49F2-8E6E-AC7E303A4F36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B69BFBBA-F3D8-49F2-8E6E-AC7E303A4F36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B69BFBBA-F3D8-49F2-8E6E-AC7E303A4F36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B69BFBBA-F3D8-49F2-8E6E-AC7E303A4F36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D890C053-440F-41CD-940D-C3EE6D4B8968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D890C053-440F-41CD-940D-C3EE6D4B8968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D890C053-440F-41CD-940D-C3EE6D4B8968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D890C053-440F-41CD-940D-C3EE6D4B8968}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1117E826-21BD-44B5-9E20-695C8206B9BC}
+	EndGlobalSection
+EndGlobal
