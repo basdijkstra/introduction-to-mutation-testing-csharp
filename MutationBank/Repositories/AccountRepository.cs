@@ -19,21 +19,15 @@ namespace MutationBank.Repositories
             return Task.CompletedTask;
         }
 
-        public Task<Account> GetAccountByIdAsync(string id)
+        public Task<Account?> GetAccountByIdAsync(string id)
         {
-            Account account = this.accounts[id];
-            return Task.FromResult(account);
+            var result = this.accounts.TryGetValue(id, out Account? account) ? account : null;
+            return Task.FromResult(result);
         }
 
         public Task<IEnumerable<Account>> GetAllAccountsAsync()
         {
             return Task.FromResult<IEnumerable<Account>>(this.accounts.Values.ToList());
-        }
-
-        public Task UpdateAccountAsync(Account account)
-        {
-            this.accounts[account.Id] = account;
-            return Task.CompletedTask;
         }
     }
 }

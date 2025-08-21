@@ -1,3 +1,4 @@
+using MutationBank.Middleware;
 using MutationBank.Repositories;
 using MutationBank.Services;
 
@@ -26,6 +27,8 @@ namespace MutationBank
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
 

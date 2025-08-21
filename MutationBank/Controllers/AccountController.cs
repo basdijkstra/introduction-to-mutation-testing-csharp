@@ -38,19 +38,7 @@ namespace MutationBank.Controllers
         public async Task<IActionResult> Get(string id)
         {
             _logger.LogInformation("GET account with ID {}", id);
-
-            if (!Guid.TryParse(id, out Guid result))
-            {
-                return BadRequest();
-            }
-
             Account account = await this.accountService.GetAccountByIdAsync(id);
-
-            if (account is null)
-            {
-                return NotFound();
-            }
-
             return Ok(account);
         }
 
@@ -65,16 +53,27 @@ namespace MutationBank.Controllers
             return this.CreatedAtRoute("GET account by ID", new { account.Id }, account);
         }
 
-        //[HttpPatch("{id}/deposit/{amount}", Name = "Deposit an amount into an account")]
-        //[ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
-        //public async Task<IActionResult> Deposit(string id, decimal amount)
-        //{
-        //    _logger.LogInformation("Deposit {} into account with ID {}", amount, id);
+        [HttpPatch("{id}/deposit/{amount}", Name = "Deposit an amount into an account")]
+        [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Deposit(string id, decimal amount)
+        {
+            _logger.LogInformation("Deposit {} into account with ID {}", amount, id);
 
-        //    Account account = await this.accountService.GetAccountByIdAsync(id);
+            var account = await this.accountService.DepositIntoAccountAsync(id, amount);
 
+            return Ok(account);
+        }
 
-        //}
+        [HttpPatch("{id}/withdraw/{amount}", Name = "Withdraw an amount from an account")]
+        [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Withdraw(string id, decimal amount)
+        {
+            _logger.LogInformation("Withdraw {} from account with ID {}", amount, id);
+
+            var account = await this.accountService.WithdrawFromAccountAsync(id, amount);
+
+            return Ok(account);
+        }
 
         [HttpDelete("{id}", Name = "DELETE an account by ID")]
         public async Task<IActionResult> Delete(string id)

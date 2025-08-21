@@ -6,12 +6,10 @@ namespace MutationBank.Repositories
     {
         Task<IEnumerable<Account>> GetAllAccountsAsync();
 
-        Task<Account> GetAccountByIdAsync(string id);
+        Task<Account?> GetAccountByIdAsync(string id);
 
         Task DeleteAccountAsync(string id);
 
         Task<Account> AddAccountAsync(Account account);
-
-        Task UpdateAccountAsync(Account account);
     }
 }
