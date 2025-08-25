@@ -94,7 +94,7 @@ namespace MutationBank.Services
             {
                 accountPersisted.Balance *= 1.01M;
             }
-            else if (accountPersisted.Balance < 1000)
+            else if (accountPersisted.Balance < 5000)
             {
                 accountPersisted.Balance *= 1.02M;
             }
