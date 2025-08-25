@@ -15,5 +15,7 @@ namespace MutationBank.Services
         Task<Account> DepositIntoAccountAsync(string accountId, decimal amount);
 
         Task<Account> WithdrawFromAccountAsync(string accountId, decimal amount);
+
+        Task<Account> AddInterestToAccountAsync(string accountId);
     }
 }

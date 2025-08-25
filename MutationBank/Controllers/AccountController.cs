@@ -75,6 +75,17 @@ namespace MutationBank.Controllers
             return Ok(account);
         }
 
+        [HttpPatch("{id}/interest", Name = "Add interest to an account")]
+        [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Interest(string id)
+        {
+            _logger.LogInformation("Add interest to account with ID {}", id);
+
+            var account = await this.accountService.AddInterestToAccountAsync(id);
+
+            return Ok(account);
+        }
+
         [HttpDelete("{id}", Name = "DELETE an account by ID")]
         public async Task<IActionResult> Delete(string id)
         {

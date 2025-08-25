@@ -80,5 +80,30 @@ namespace MutationBank.Services
 
             return await AddAccountAsync(accountPersisted);
         }
+
+        public async Task<Account> AddInterestToAccountAsync(string id)
+        {
+            var accountPersisted = await GetAccountByIdAsync(id);
+
+            if (accountPersisted.Type.Equals(AccountType.CHECKING))
+            {
+                throw new BadRequestException("You cannot add interest to a checking account");
+            }
+
+            if (accountPersisted.Balance < 1000)
+            {
+                accountPersisted.Balance *= 1.01M;
+            }
+            else if (accountPersisted.Balance < 1000)
+            {
+                accountPersisted.Balance *= 1.02M;
+            }
+            else
+            {
+                accountPersisted.Balance *= 1.03M;
+            }
+
+            return await AddAccountAsync(accountPersisted);
+        }
     }
 }
