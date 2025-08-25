@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc.Testing;
 using MutationBank.Models;
+using MutationBank.Tests.Clients;
+using Newtonsoft.Json;
+using System.Net;
 using static RestAssured.Dsl;
 
 namespace MutationBank.Tests
@@ -7,126 +11,125 @@ namespace MutationBank.Tests
     [TestFixture]
     public class MutationBankTests
     {
-        [Test]
-        public void RetrieveListOfAccounts()
-        {
-            var webAppFactory = new WebApplicationFactory<Program>();
-            var httpClient = webAppFactory.CreateDefaultClient();
+        private AccountClient accountClient;
 
-            Given(httpClient)
-                .When()
-                .Get("http://localhost:5131/account")
-                .Then()
-                .StatusCode(204);
+        [SetUp]
+        public void CreateClient()
+        {
+            this.accountClient = new AccountClient("http://localhost", 5131);
         }
 
         [Test]
-        public void CreateThenRetrieveAccount()
+        public void CreateNewCheckingAccount_WhenRetrieved_ShouldHaveZeroBalance()
         {
-            var webAppFactory = new WebApplicationFactory<Program>();
-            var httpClient = webAppFactory.CreateDefaultClient();
-
             var account = new Account
             {
                 Id = Guid.NewGuid().ToString(),
                 Type = AccountType.CHECKING,
             };
 
-            var id = Given(httpClient)
-                .Body(account)
-                .When()
-                .Post("http://localhost:5131/account")
-                .Then()
-                .StatusCode(201)
-                .Extract().Body("$.id");
+            var id = this.accountClient.CreateAccount(account);
 
-            Given(httpClient)
-                .When()
-                .Get($"http://localhost:5131/account/{id}")
-                .Then()
-                .Log(RestAssured.Response.Logging.ResponseLogLevel.All)
-                .StatusCode(200);
+            var response = this.accountClient.GetAccount(id);
+
+            response.StatusCode(HttpStatusCode.OK);
+            response.Body("$.balance", NHamcrest.Is.EqualTo(0));
         }
 
         [Test]
-        public void GetNonexistentAccount()
+        public void GetNonexistentAccount_shouldReturn404()
         {
-            var webAppFactory = new WebApplicationFactory<Program>();
-            var httpClient = webAppFactory.CreateDefaultClient();
+            var id = Guid.NewGuid().ToString();
 
-            var accountId = Guid.NewGuid().ToString();
+            var response = this.accountClient.GetAccount(id);
 
-            var id = Given(httpClient)
-                .When()
-                .Get($"http://localhost:5131/account/{accountId}")
-                .Then()
-                .Log(RestAssured.Response.Logging.ResponseLogLevel.All)
-                .StatusCode(404);
+            response.StatusCode(HttpStatusCode.NotFound);
         }
 
         [Test]
-        public void DepositTest()
+        public void CreateNewAccount_RetrieveAllAccounts_ShouldContainCreatedAccount()
         {
-            var webAppFactory = new WebApplicationFactory<Program>();
-            var httpClient = webAppFactory.CreateDefaultClient();
-
             var account = new Account
             {
                 Id = Guid.NewGuid().ToString(),
                 Type = AccountType.CHECKING,
             };
 
-            var id = Given(httpClient)
-                .Body(account)
-                .When()
-                .Post("http://localhost:5131/account")
-                .Then()
-                .StatusCode(201)
-                .Extract().Body("$.id");
+            var id = this.accountClient.CreateAccount(account);
 
-            Given(httpClient)
-                .When()
-                .Patch($"http://localhost:5131/account/{id}/deposit/50")
-                .Then()
-                .Log(RestAssured.Response.Logging.ResponseLogLevel.All)
-                .StatusCode(200)
-                .Body("$.balance", NHamcrest.Is.EqualTo(50));
+            var response = this.accountClient.GetAllAccounts();
+
+            response.StatusCode(HttpStatusCode.OK);
+            response.Body("$[*].id", NHamcrest.Has.Item(NHamcrest.Is.EqualTo(account.Id)));
         }
 
         [Test]
-        public void WithdrawTest()
+        public void DeleteNonexistentAccount_ShouldReturn204()
         {
-            var webAppFactory = new WebApplicationFactory<Program>();
-            var httpClient = webAppFactory.CreateDefaultClient();
+            var id = Guid.NewGuid().ToString();
 
+            var response = this.accountClient.DeleteAccount(id);
+
+            response.StatusCode(HttpStatusCode.NoContent);
+        }
+
+        [Test]
+        public void DepositIntoCheckingAccount_WhenRetrieved_ShouldShowUpdatedBalance()
+        {
             var account = new Account
             {
                 Id = Guid.NewGuid().ToString(),
                 Type = AccountType.CHECKING,
             };
 
-            var id = Given(httpClient)
-                .Body(account)
-                .When()
-                .Post("http://localhost:5131/account")
-                .Then()
-                .StatusCode(201)
-                .Extract().Body("$.id");
+            var id = this.accountClient.CreateAccount(account);
 
-            Given(httpClient)
-                .When()
-                .Patch($"http://localhost:5131/account/{id}/deposit/50")
-                .Then()
-                .StatusCode(200)
-                .Body("$.balance", NHamcrest.Is.EqualTo(50));
+            var response = this.accountClient.DepositToAccount(id, 10);
 
-            Given(httpClient)
-                .When()
-                .Patch($"http://localhost:5131/account/{id}/withdraw/30")
-                .Then()
-                .Log(RestAssured.Response.Logging.ResponseLogLevel.All)
-                .StatusCode(200)
-                .Body("$.balance", NHamcrest.Is.EqualTo(20));
+            response.StatusCode(HttpStatusCode.OK);
+            response.Body("$.balance", NHamcrest.Is.EqualTo(10));
+        }
+
+        [Test]
+        public void OverdrawOnSavingsAccount_ShouldReturn400_ShouldNotImpactBalance()
+        {
+            var account = new Account
+            {
+                Id = Guid.NewGuid().ToString(),
+                Type = AccountType.SAVINGS,
+            };
+
+            var id = this.accountClient.CreateAccount(account);
+
+            this.accountClient.DepositToAccount(id, 10);
+
+            var response = this.accountClient.WithdrawFromAccount(id, 20);
+
+            response.StatusCode(HttpStatusCode.BadRequest);
+
+            var getResponse = this.accountClient.GetAccount(id);
+
+            getResponse.Body("$.balance", NHamcrest.Is.EqualTo(10));
+        }
+
+        [TestCase(100, 101, TestName = "A balance of 100 should be 101 after adding interest")]
+        [TestCase(3000, 3060, TestName = "A balance of 3000 should be 3060 after adding interest")]
+        [TestCase(6000, 6180, TestName = "A balance of 6000 should be 6180 after adding interest")]
+        public void AddInterestToSavingsAccount_ShouldUpdateBalanceCorrectly(int amountToDeposit, int expectedBalance)
+        {
+            var account = new Account
+            {
+                Id = Guid.NewGuid().ToString(),
+                Type = AccountType.SAVINGS,
+            };
+
+            var id = this.accountClient.CreateAccount(account);
+
+            this.accountClient.DepositToAccount(id, amountToDeposit);
+
+            var response = this.accountClient.AddInterestToAccount(id);
+
+            response.Body("$.balance", NHamcrest.Is.EqualTo(expectedBalance));
         }
     }
 }
